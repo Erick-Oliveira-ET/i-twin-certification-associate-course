@@ -39,6 +39,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Auth } from "./Auth";
 import { history } from "./history";
 import { Visualization } from "./Visualization";
+import { SmartDeviceDecorator } from "./components/decorators/SmartDeciceDecorator";
 
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
@@ -150,6 +151,8 @@ const App: React.FC = () => {
       vp.overrideDisplayStyle(viewStyle);
 
       Visualization.hideHouseExterior(vp);
+
+      IModelApp.viewManager.addDecorator(new SmartDeviceDecorator(vp));
     });
   };
 
