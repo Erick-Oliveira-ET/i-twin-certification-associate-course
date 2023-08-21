@@ -40,6 +40,7 @@ import { Auth } from "./Auth";
 import { history } from "./history";
 import { Visualization } from "./Visualization";
 import { SmartDeviceDecorator } from "./components/decorators/SmartDeciceDecorator";
+import { SmartDeviceUiItemsProvider } from "./providers/SmartDeviceUiItemsProviders";
 
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
@@ -203,6 +204,7 @@ const App: React.FC = () => {
             },
           }),
           new MeasureToolsUiItemsProvider(),
+          new SmartDeviceUiItemsProvider(),
         ]}
       />
     </div>
