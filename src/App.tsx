@@ -33,11 +33,12 @@ import {
   ViewerPerformance,
   ViewerStatusbarItemsProvider,
 } from "@itwin/web-viewer-react";
+import { DisplayStyleSettingsProps } from "@itwin/core-common";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Auth } from "./Auth";
 import { history } from "./history";
-import { Visualization } from "./Visuallization";
+import { Visualization } from "./Visualization";
 
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
@@ -139,6 +140,15 @@ const App: React.FC = () => {
 
   const onIModelConnected = (_imodel: IModelConnection) => {
     IModelApp.viewManager.onViewOpen.addOnce(async (vp: ScreenViewport) => {
+      const viewStyle: DisplayStyleSettingsProps = {
+        viewflags: {
+          visEdges: false,
+          shadows: true,
+        },
+      };
+
+      vp.overrideDisplayStyle(viewStyle);
+
       Visualization.hideHouseExterior(vp);
     });
   };
