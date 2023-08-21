@@ -1,20 +1,30 @@
-import { Marker } from "@itwin/core-frontend";
+import {
+  Marker,
+  OutputMessagePriority,
+  IModelApp,
+  NotifyMessageDetails,
+  StandardViewId,
+} from "@itwin/core-frontend";
+import { BeButtonEvent } from "@itwin/core-frontend/lib/cjs/tools/Tool";
 import { XAndY, XYAndZ } from "@itwin/core-geometry";
 
 export class SmartDeviceMarker extends Marker {
   private _smartDeviceId: string;
   private _smartDeviceType: string;
+  private _elementId: string;
 
   constructor(
     location: XYAndZ,
     size: XAndY,
     smartDeviceId: string,
     smartDeviceType: string,
-    cloudData: any
+    cloudData: any,
+    elementId: string
   ) {
     super(location, size);
     this._smartDeviceId = smartDeviceId;
     this._smartDeviceType = smartDeviceType;
+    this._elementId = elementId;
 
     this.setImageUrl(`/${this._smartDeviceType}.png`);
     this.title = this.populateTitle(cloudData);
@@ -41,5 +51,22 @@ export class SmartDeviceMarker extends Marker {
             </table>
         `;
     return smartTableDiv;
+  }
+
+  public onMouseButton(_ev: BeButtonEvent): boolean {
+    if (!_ev.isDown) return true;
+    IModelApp.notifications.outputMessage(
+      new NotifyMessageDetails(
+        OutputMessagePriority.Info,
+        `Element ${this._smartDeviceId} was clicked on`
+      )
+    );
+
+    IModelApp.viewManager.selectedView!.zoomToElements(this._elementId, {
+      animateFrustumChange: true,
+      standardViewId: StandardViewId.RightIso,
+    });
+
+    return true;
   }
 }
