@@ -1,16 +1,22 @@
 import { CommonToolbarItem, ToolbarItemUtilities } from "@itwin/appui-abstract";
 import {
+  StagePanelLocation,
+  StagePanelSection,
   StageUsage,
   ToolbarOrientation,
   ToolbarUsage,
   UiItemsProvider,
+  Widget,
 } from "@itwin/appui-react";
 import { Visualization } from "../Visualization";
 import { IModelApp } from "@itwin/core-frontend";
+import { SmartDeviceListWidgetComponent } from "../components/widgets/SmartDeviceListWidgetComponent";
 
 export class SmartDeviceUiItemsProvider implements UiItemsProvider {
   public readonly id = "SmartDeviceUiProvider";
   private _toggleWalls: boolean = false;
+
+  public static smartDeviceData: any;
 
   public provideToolbarItems(
     stageId: string,
@@ -41,5 +47,32 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
       toolbarButtonItems.push(toggleWallsButton);
     }
     return toolbarButtonItems;
+  }
+
+  public provideWidgets(
+    stageId: string,
+    stageUsage: string,
+    location: StagePanelLocation,
+    section?: StagePanelSection | undefined
+  ): ReadonlyArray<Widget> {
+    const widgets: Widget[] = [];
+
+    console.log(typeof stageId);
+    console.log(location);
+
+    if (
+      stageId === "iTwinViewer.DefaultFrontstage" &&
+      location === StagePanelLocation.Right
+    ) {
+      const widget: Widget = {
+        id: "smartDeviceListWidget",
+        label: "Smart Devices",
+        content: <SmartDeviceListWidgetComponent />,
+      };
+
+      widgets.push(widget);
+    }
+
+    return widgets;
   }
 }

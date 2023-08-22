@@ -8,6 +8,7 @@ import {
 import { QueryRowFormat } from "@itwin/core-common";
 import { SmartDeviceMarker } from "../markers/SmartDeviceMarker";
 import { SmartDeviceAPI } from "../../SmartDeviceAPI";
+import { UiFramework } from "@itwin/appui-react";
 
 export class SmartDeviceDecorator implements Decorator {
   private _iModel: IModelConnection;
@@ -19,20 +20,24 @@ export class SmartDeviceDecorator implements Decorator {
     this.addMarkers();
   }
 
-  private async getSmartDeviceData() {
+  public static async getSmartDeviceData() {
     const query = `SELECT  SmartDeviceId, SmartDeviceType, ECInstanceId, Origin 
                             FROM DgnCustomItemTypes_HouseSchema.SmartDevice 
                             WHERE Origin IS NOT NULL`;
 
-    const result = this._iModel.createQueryReader(query, undefined, {
-      rowFormat: QueryRowFormat.UseJsPropertyNames,
-    });
+    const result = UiFramework.getIModelConnection()!.createQueryReader(
+      query,
+      undefined,
+      {
+        rowFormat: QueryRowFormat.UseJsPropertyNames,
+      }
+    );
 
     return await result.toArray();
   }
 
   private async addMarkers() {
-    const values = await this.getSmartDeviceData();
+    const values = await SmartDeviceDecorator.getSmartDeviceData();
     const cloudData = await SmartDeviceAPI.getData();
 
     values.forEach((value) => {
