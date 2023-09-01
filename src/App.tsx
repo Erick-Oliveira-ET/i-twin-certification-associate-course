@@ -42,10 +42,11 @@ import { Visualization } from "./Visualization";
 import { SmartDeviceDecorator } from "./components/decorators/SmartDeciceDecorator";
 import { SmartDeviceUiItemsProvider } from "./providers/SmartDeviceUiItemsProviders";
 import { ProjectsProvider } from "./providers/ProjectsProvider";
+import ValidationLink from "./ValidationLink";
 
 const App: React.FC = () => {
-  const [iModelId, setIModelId] = useState<string | undefined>();
-  const [iTwinId, setITwinId] = useState<string | undefined>();
+  const [iModelId, setIModelId] = useState<string | undefined>(undefined);
+  const [iTwinId, setITwinId] = useState<string | undefined>(undefined);
   const [changesetId, setChangesetId] = useState(
     process.env.IMJS_AUTH_CLIENT_CHANGESET_ID
   );
@@ -80,7 +81,8 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let url = `viewer?iTwinId=${iTwinId}`;
+    let url = `viewer?iTwinId=${process.env.IMJS_ITWIN_ID}`;
+    if (iTwinId) url = `viewer?iTwinId=${iTwinId}`;
 
     if (iModelId) {
       url = `${url}&iModelId=${iModelId}`;
@@ -139,23 +141,63 @@ const App: React.FC = () => {
     await PropertyGridManager.initialize();
     await MeasureTools.startup();
     MeasurementActionToolbar.setDefaultActionProvider();
+    console.log(await ValidationLink.getTemplates());
   }, []);
 
   const onIModelConnected = (_imodel: IModelConnection) => {
-    IModelApp.viewManager.onViewOpen.addOnce(async (vp: ScreenViewport) => {
-      const viewStyle: DisplayStyleSettingsProps = {
-        viewflags: {
-          visEdges: false,
-          shadows: true,
+    if (iModelId === process.env.IMJS_IMODEL_SMART_HOUSE_ID) {
+      IModelApp.viewManager.onViewOpen.addOnce(async (vp: ScreenViewport) => {
+        const viewStyle: DisplayStyleSettingsProps = {
+          viewflags: {
+            visEdges: false,
+            shadows: true,
+          },
+        };
+
+        vp.overrideDisplayStyle(viewStyle);
+
+        Visualization.hideHouseExterior(vp);
+
+        IModelApp.viewManager.addDecorator(new SmartDeviceDecorator(vp));
+      });
+    }
+  };
+
+  const getProviders = () => {
+    let providers: any = [
+      new ViewerNavigationToolsProvider(),
+      new ViewerContentToolsProvider({
+        vertical: {
+          measureGroup: false,
         },
-      };
+      }),
+      new ViewerStatusbarItemsProvider(),
+      new TreeWidgetUiItemsProvider(),
+      new PropertyGridUiItemsProvider({
+        propertyGridProps: {
+          autoExpandChildCategories: true,
+          ancestorsNavigationControls: (props) => (
+            <AncestorsNavigationControls {...props} />
+          ),
+          contextMenuItems: [
+            (props) => <CopyPropertyTextContextMenuItem {...props} />,
+          ],
+          settingsMenuItems: [
+            (props) => (
+              <ShowHideNullValuesSettingsMenuItem {...props} persist={true} />
+            ),
+          ],
+        },
+      }),
+      new MeasureToolsUiItemsProvider(),
+      new ProjectsProvider(),
+    ];
 
-      vp.overrideDisplayStyle(viewStyle);
+    if (iModelId === process.env.IMJS_IMODEL_SMART_HOUSE_ID) {
+      providers = providers.concat([new SmartDeviceUiItemsProvider()]);
+    }
 
-      Visualization.hideHouseExterior(vp);
-
-      IModelApp.viewManager.addDecorator(new SmartDeviceDecorator(vp));
-    });
+    return providers;
   };
 
   return (
@@ -169,45 +211,16 @@ const App: React.FC = () => {
       )}
       <Viewer
         iTwinId={iTwinId ?? (process.env.IMJS_ITWIN_ID as string)}
-        iModelId={iModelId ?? (process.env.IMJS_IMODEL_ID as string)}
+        iModelId={
+          iModelId ?? (process.env.IMJS_IMODEL_SMART_HOUSE_ID as string)
+        }
         changeSetId={changesetId}
         authClient={authClient}
         viewCreatorOptions={viewCreatorOptions}
         enablePerformanceMonitors={true} // see description in the README (https://www.npmjs.com/package/@itwin/web-viewer-react)
         onIModelAppInit={onIModelAppInit}
         onIModelConnected={onIModelConnected}
-        uiProviders={[
-          new ViewerNavigationToolsProvider(),
-          new ViewerContentToolsProvider({
-            vertical: {
-              measureGroup: false,
-            },
-          }),
-          new ViewerStatusbarItemsProvider(),
-          new TreeWidgetUiItemsProvider(),
-          new PropertyGridUiItemsProvider({
-            propertyGridProps: {
-              autoExpandChildCategories: true,
-              ancestorsNavigationControls: (props) => (
-                <AncestorsNavigationControls {...props} />
-              ),
-              contextMenuItems: [
-                (props) => <CopyPropertyTextContextMenuItem {...props} />,
-              ],
-              settingsMenuItems: [
-                (props) => (
-                  <ShowHideNullValuesSettingsMenuItem
-                    {...props}
-                    persist={true}
-                  />
-                ),
-              ],
-            },
-          }),
-          new MeasureToolsUiItemsProvider(),
-          new SmartDeviceUiItemsProvider(),
-          new ProjectsProvider(),
-        ]}
+        uiProviders={getProviders()}
       />
     </div>
   );

@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAccessToken } from "@itwin/web-viewer-react";
-import {
-  ITwin,
-  ITwinSubClass,
-  ITwinsAccessClient,
-  Repository,
-} from "@itwin/itwins-client";
-import { history } from "../../history";
 
 export function ProjectsListWidgetComponent() {
-  const iTwinsAccessClient: ITwinsAccessClient = new ITwinsAccessClient();
   const [projects, setProjectData] = useState<any[] | undefined>([]);
 
   const accessToken = useAccessToken();
@@ -36,12 +28,6 @@ export function ProjectsListWidgetComponent() {
   useEffect(() => {
     void getProjects();
   }, [accessToken]);
-
-  const handleRedirect = (iModelId: string) => {
-    history.push(
-      `/viewer?iTwinId=${process.env.IMJS_ITWIN_ID}&ModelId=${iModelId}`
-    );
-  };
 
   return (
     <>
