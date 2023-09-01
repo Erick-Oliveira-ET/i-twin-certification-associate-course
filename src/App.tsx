@@ -141,7 +141,12 @@ const App: React.FC = () => {
     await PropertyGridManager.initialize();
     await MeasureTools.startup();
     MeasurementActionToolbar.setDefaultActionProvider();
-    console.log(await ValidationLink.getTemplates());
+    console.log(
+      await ValidationLink.createPipeValidationRule(0, 0.8, 32, 104, {
+        label: "Arnosite Asbestos",
+        value: "ARNOSITE_ASBESTOS",
+      })
+    );
   }, []);
 
   const onIModelConnected = (_imodel: IModelConnection) => {
