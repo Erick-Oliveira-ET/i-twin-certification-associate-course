@@ -41,10 +41,11 @@ import { history } from "./history";
 import { Visualization } from "./Visualization";
 import { SmartDeviceDecorator } from "./components/decorators/SmartDeciceDecorator";
 import { SmartDeviceUiItemsProvider } from "./providers/SmartDeviceUiItemsProviders";
+import { ProjectsProvider } from "./providers/ProjectsProvider";
 
 const App: React.FC = () => {
-  const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
-  const [iTwinId, setITwinId] = useState(process.env.IMJS_ITWIN_ID);
+  const [iModelId, setIModelId] = useState<string | undefined>();
+  const [iTwinId, setITwinId] = useState<string | undefined>();
   const [changesetId, setChangesetId] = useState(
     process.env.IMJS_AUTH_CLIENT_CHANGESET_ID
   );
@@ -82,7 +83,7 @@ const App: React.FC = () => {
     let url = `viewer?iTwinId=${iTwinId}`;
 
     if (iModelId) {
-      url = `${url}&ModelId=${iModelId}`;
+      url = `${url}&iModelId=${iModelId}`;
     }
 
     if (changesetId) {
@@ -167,8 +168,8 @@ const App: React.FC = () => {
         </FillCentered>
       )}
       <Viewer
-        iTwinId={iTwinId ?? ""}
-        iModelId={iModelId ?? ""}
+        iTwinId={iTwinId ?? (process.env.IMJS_ITWIN_ID as string)}
+        iModelId={iModelId ?? (process.env.IMJS_IMODEL_ID as string)}
         changeSetId={changesetId}
         authClient={authClient}
         viewCreatorOptions={viewCreatorOptions}
@@ -205,6 +206,7 @@ const App: React.FC = () => {
           }),
           new MeasureToolsUiItemsProvider(),
           new SmartDeviceUiItemsProvider(),
+          new ProjectsProvider(),
         ]}
       />
     </div>

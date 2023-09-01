@@ -57,9 +57,6 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
   ): ReadonlyArray<Widget> {
     const widgets: Widget[] = [];
 
-    console.log(typeof stageId);
-    console.log(location);
-
     if (
       stageId === "iTwinViewer.DefaultFrontstage" &&
       location === StagePanelLocation.Right
