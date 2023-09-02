@@ -1,10 +1,18 @@
 import { IModelApp } from "@itwin/core-frontend";
 import {
   ParamsToCreateRule,
+  ParamsToCreateTest,
+  ParamsToGetResult,
+  ParamsToGetRun,
   ParamsToGetTemplateList,
+  ParamsToRunTest,
   PropertyValidationClient,
+  ResponseFromGetResult,
   Rule,
   RuleTemplate,
+  Run,
+  RunDetails,
+  Test,
 } from "@itwin/property-validation-client";
 
 export default class ValidationLink {
@@ -71,5 +79,47 @@ export default class ValidationLink {
     };
 
     return ValidationLink.client.rules.create(params);
+  }
+
+  public static async createTest(
+    testName: string,
+    description: string,
+    ruleIds: string[]
+  ): Promise<Test> {
+    const params: ParamsToCreateTest = {
+      projectId: process.env.IMJS_ITWIN_ID!,
+      displayName: testName,
+      description: description,
+      rules: ruleIds,
+      stopExecutionOnFailure: false,
+    };
+    return ValidationLink.client.tests.create(params);
+  }
+
+  public static async runTest(testId: string): Promise<Run | undefined> {
+    const params: ParamsToRunTest = {
+      testId,
+      iModelId: process.env.IMJS_IMODEL_ID!,
+    };
+
+    return ValidationLink.client.tests.runTest(params);
+  }
+
+  public static async getRun(runId: string): Promise<RunDetails> {
+    const params: ParamsToGetRun = {
+      runId,
+    };
+
+    return ValidationLink.client.runs.getSingle(params);
+  }
+
+  public static async getResult(
+    resultId: string
+  ): Promise<ResponseFromGetResult> {
+    const params: ParamsToGetResult = {
+      resultId,
+    };
+
+    return ValidationLink.client.results.get(params);
   }
 }
