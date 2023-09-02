@@ -3,16 +3,21 @@ import {
   ParamsToCreateRule,
   ParamsToCreateTest,
   ParamsToGetResult,
+  ParamsToGetRuleList,
   ParamsToGetRun,
+  ParamsToGetRunList,
   ParamsToGetTemplateList,
+  ParamsToGetTestList,
   ParamsToRunTest,
   PropertyValidationClient,
   ResponseFromGetResult,
   Rule,
+  RuleDetails,
   RuleTemplate,
   Run,
   RunDetails,
   Test,
+  TestItem,
 } from "@itwin/property-validation-client";
 
 export default class ValidationLink {
@@ -60,7 +65,13 @@ export default class ValidationLink {
     )[0];
 
     const ruleName = `${material.label} | Temperature: ${tempLow} - ${tempHigh} | Insulation: ${insulationLow} | ${insulationLow}`;
-    const ruleDetails = { insulationLow, insulationHigh, tempLow, tempHigh };
+    const ruleDetails = {
+      material,
+      insulationLow,
+      insulationHigh,
+      tempLow,
+      tempHigh,
+    };
 
     const params: ParamsToCreateRule = {
       displayName: ruleName,
@@ -81,6 +92,21 @@ export default class ValidationLink {
     return ValidationLink.client.rules.create(params);
   }
 
+  public static async getRules(): Promise<RuleDetails[]> {
+    const params: ParamsToGetRuleList = {
+      urlParams: {
+        projectId: process.env.IMJS_ITWIN_ID!,
+      },
+    };
+
+    const iterator = ValidationLink.client.rules.getRepresentationList(params);
+
+    const rules = [];
+    for await (const rule of iterator) rules.push(rule);
+
+    return rules;
+  }
+
   public static async createTest(
     testName: string,
     description: string,
@@ -96,6 +122,21 @@ export default class ValidationLink {
     return ValidationLink.client.tests.create(params);
   }
 
+  // Get all tests for a given iTwin.
+  public static async getTests(): Promise<TestItem[]> {
+    const params: ParamsToGetTestList = {
+      urlParams: {
+        projectId: process.env.IMJS_ITWIN_ID!,
+      },
+    };
+
+    const iterator = ValidationLink.client.tests.getList(params);
+    const tests = [];
+    for await (const test of iterator) tests.push(test);
+
+    return tests;
+  }
+
   public static async runTest(testId: string): Promise<Run | undefined> {
     const params: ParamsToRunTest = {
       testId,
@@ -103,6 +144,23 @@ export default class ValidationLink {
     };
 
     return ValidationLink.client.tests.runTest(params);
+  }
+
+  // Get all runs for a given iTwin.
+  public static async getRuns(): Promise<RunDetails[]> {
+    const params: ParamsToGetRunList = {
+      urlParams: {
+        projectId: process.env.IMJS_ITWIN_ID!,
+      },
+    };
+
+    const iterator = await ValidationLink.client.runs.getRepresentationList(
+      params
+    );
+    const runs = [];
+    for await (const run of iterator) runs.push(run);
+
+    return runs;
   }
 
   public static async getRun(runId: string): Promise<RunDetails> {
@@ -113,6 +171,7 @@ export default class ValidationLink {
     return ValidationLink.client.runs.getSingle(params);
   }
 
+  // Get results for a given result id.
   public static async getResult(
     resultId: string
   ): Promise<ResponseFromGetResult> {

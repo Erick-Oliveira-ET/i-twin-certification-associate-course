@@ -5,14 +5,15 @@
 
 import "./App.scss";
 
+import { DisplayStyleSettingsProps } from "@itwin/core-common";
 import type { IModelConnection, ScreenViewport } from "@itwin/core-frontend";
 import { FitViewTool, IModelApp, StandardViewId } from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
 import { ProgressLinear } from "@itwin/itwinui-react";
 import {
-  MeasurementActionToolbar,
   MeasureTools,
   MeasureToolsUiItemsProvider,
+  MeasurementActionToolbar,
 } from "@itwin/measure-tools-react";
 import {
   AncestorsNavigationControls,
@@ -26,23 +27,24 @@ import {
   TreeWidgetUiItemsProvider,
 } from "@itwin/tree-widget-react";
 import {
-  useAccessToken,
   Viewer,
   ViewerContentToolsProvider,
   ViewerNavigationToolsProvider,
   ViewerPerformance,
   ViewerStatusbarItemsProvider,
+  useAccessToken,
 } from "@itwin/web-viewer-react";
-import { DisplayStyleSettingsProps } from "@itwin/core-common";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Auth } from "./Auth";
-import { history } from "./history";
+import { GenericStateProvider } from "./StateProvider";
+import ValidationLink from "./ValidationLink";
 import { Visualization } from "./Visualization";
 import { SmartDeviceDecorator } from "./components/decorators/SmartDeciceDecorator";
-import { SmartDeviceUiItemsProvider } from "./providers/SmartDeviceUiItemsProviders";
+import { history } from "./history";
 import { ProjectsProvider } from "./providers/ProjectsProvider";
-import ValidationLink from "./ValidationLink";
+import { SmartDeviceUiItemsProvider } from "./providers/SmartDeviceUiItemsProviders";
+import { ValidationUiItemsProvider } from "./providers/ValidationUiItemsProvider";
 
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState<string | undefined>(undefined);
@@ -198,11 +200,26 @@ const App: React.FC = () => {
       new ProjectsProvider(),
     ];
 
-    if (iModelId === process.env.IMJS_IMODEL_SMART_HOUSE_ID) {
-      providers = providers.concat([new SmartDeviceUiItemsProvider()]);
+    switch (iModelId) {
+      case process.env.IMJS_IMODEL_SMART_HOUSE_ID:
+        providers = providers.concat([new SmartDeviceUiItemsProvider()]);
+        break;
+      case process.env.IMJS_IMODEL_PLANT_ID:
+        console.log("passou por aqui");
+        providers = providers.concat([new ValidationUiItemsProvider()]);
+        break;
     }
 
     return providers;
+  };
+
+  const defaultITwinId = () => {
+    setITwinId(process.env.IMJS_ITWIN_ID as string);
+    return process.env.IMJS_ITWIN_ID as string;
+  };
+  const defaultIModelId = () => {
+    setIModelId(process.env.IMJS_IMODEL_SMART_HOUSE_ID as string);
+    return process.env.IMJS_IMODEL_SMART_HOUSE_ID as string;
   };
 
   return (
@@ -214,19 +231,19 @@ const App: React.FC = () => {
           </div>
         </FillCentered>
       )}
-      <Viewer
-        iTwinId={iTwinId ?? (process.env.IMJS_ITWIN_ID as string)}
-        iModelId={
-          iModelId ?? (process.env.IMJS_IMODEL_SMART_HOUSE_ID as string)
-        }
-        changeSetId={changesetId}
-        authClient={authClient}
-        viewCreatorOptions={viewCreatorOptions}
-        enablePerformanceMonitors={true} // see description in the README (https://www.npmjs.com/package/@itwin/web-viewer-react)
-        onIModelAppInit={onIModelAppInit}
-        onIModelConnected={onIModelConnected}
-        uiProviders={getProviders()}
-      />
+      <GenericStateProvider>
+        <Viewer
+          iTwinId={iTwinId ?? defaultITwinId()}
+          iModelId={iModelId ?? defaultIModelId()}
+          changeSetId={changesetId}
+          authClient={authClient}
+          viewCreatorOptions={viewCreatorOptions}
+          enablePerformanceMonitors={true} // see description in the README (https://www.npmjs.com/package/@itwin/web-viewer-react)
+          onIModelAppInit={onIModelAppInit}
+          onIModelConnected={onIModelConnected}
+          uiProviders={getProviders()}
+        />
+      </GenericStateProvider>
     </div>
   );
 };
